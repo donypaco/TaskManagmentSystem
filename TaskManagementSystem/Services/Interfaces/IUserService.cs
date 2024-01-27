@@ -7,6 +7,6 @@ namespace TaskManagementSystem.Services.Interfaces
     {
         string GenerateJwtToken(User user);
         Task<string> Register(RegisterModel model);
-        string Login(LoginModel model);
+        Task<string> Login(LoginModel model);
     }
 }

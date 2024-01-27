@@ -1,10 +1,10 @@
-using AuctionAppBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagementSystem.Data;
+using TaskManagementSystem.Services;
 using TaskManagementSystem.Services.Interfaces;
 
 
@@ -15,8 +15,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddCors(p => p.AddPolicy("AllowOrigin", builder =>
 {
@@ -56,9 +61,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.UseCors("AllowOrigin");
 app.Run();

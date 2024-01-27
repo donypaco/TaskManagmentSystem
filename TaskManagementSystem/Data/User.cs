@@ -1,16 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace TaskManagementSystem.Data
 {
-    public class User
+    public class User : IdentityUser
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id_User { get; set; }
-        [Required]
-        [StringLength(100)]
-        public string Username { get; set; }
+        //[Required]
+        //[StringLength(100)]
+        //public string Username { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -25,9 +26,5 @@ namespace TaskManagementSystem.Data
         public int RoleId { get; set; }
         public Role Role { get; set; } = new Role();
         public List<Task> TasksAssigned { get; set; } = new List<Task>();
-
-        //public List<Task> TasksCreated { get; set; } = new List<Task>();
-
-
     }
 }

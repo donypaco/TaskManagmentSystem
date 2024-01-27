@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -6,17 +7,20 @@ using TaskManagementSystem.Data;
 using TaskManagementSystem.DTO;
 using TaskManagementSystem.Services.Interfaces;
 
-namespace AuctionAppBackend.Services
+namespace TaskManagementSystem.Services
 {
     public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly UserManager<User> _userManager; 
 
-        public UserService(ApplicationDbContext context, IConfiguration configuration)
+
+        public UserService(ApplicationDbContext context, IConfiguration configuration, UserManager<User> userManager)
         {
             _context = context;
             _configuration = configuration;
+            _userManager = userManager;
         }
         public async Task<string> Register(RegisterModel model)
         {
@@ -25,51 +29,53 @@ namespace AuctionAppBackend.Services
                 var role = await _context.Roles.FindAsync(model.RoleId);
                 if (role == null)
                 {
-                    return "Invalid RoleId";
+                    return null;
                 }
 
                 User user = new User
                 {
-                    Username = model.Username,
-                    Password = model.Password,
+                    UserName = model.Username,
+                    Password = _userManager.PasswordHasher.HashPassword(null, model.Password),
                     Email = model.Email,
-                    RoleId = model.RoleId
+                    Role = role
                 };
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                var token = GenerateJwtToken(user);
-
-                return token;
+                return GenerateJwtToken(user);
             }
             catch (Exception ex)
             {
             }
             return null;
         }
-        public string Login(LoginModel model)
+        public async Task<string> Login(LoginModel model)
         {
             try
             {
-                var userFound = _context.Users.SingleOrDefault(u =>
-                u.Username == model.Username && u.Password == model.Password);
+                var user = _context.Users.SingleOrDefault(u => u.UserName == model.Username);
+                if (user != null)
+                {
+                    var passwordVerificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.Password, model.Password);
 
-                if (userFound == null)
-                    return null;
+                    var result = (passwordVerificationResult == PasswordVerificationResult.Success);
 
-                var claims = new List<Claim>
-            {
-            new Claim(ClaimTypes.NameIdentifier, userFound.Id_User.ToString()),
-            new Claim(ClaimTypes.Name, userFound.Username),
-            };
+                    if (result)
+                    {
+                        var claims = new List<Claim>
+                        {
+                        new Claim(ClaimTypes.NameIdentifier, user.Id_User.ToString()),
+                        new Claim(ClaimTypes.Name, user.UserName),
+                        };
+                        return GenerateJwtToken(user);
 
-                var token = GenerateJwtToken(userFound);
-
-                return token;
+                    }
+                }
+                return null;
             }
             catch(Exception ex)
             {
-
+                throw;
             }
             return null;
 
@@ -82,7 +88,7 @@ namespace AuctionAppBackend.Services
             var claims = new List<Claim>
             {
             new Claim(ClaimTypes.NameIdentifier, user.Id_User.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Name, user.UserName),
             new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:Audience"])
             };
 

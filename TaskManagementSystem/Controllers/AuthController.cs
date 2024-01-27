@@ -6,14 +6,12 @@ using TaskManagementSystem.Services.Interfaces;
 
 namespace TaskManagementSystem.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/Auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
-        public AuthController( IConfiguration configuration, IUserService userService)
+        public AuthController(IUserService userService)
         {
-            _configuration = configuration;
             _userService = userService;
         }
         [HttpPost("Register")]

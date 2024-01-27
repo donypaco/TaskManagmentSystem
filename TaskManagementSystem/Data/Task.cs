@@ -16,12 +16,6 @@ namespace TaskManagementSystem.Data
         public DateTime CreatedDate { get; set; }
         public DateTime CompletedDate { get; set; }
         public int StatusId { get; set; }
-
-        //public int UserCreatedId { get; set; }
-
-        //[ForeignKey("UserCreatedId")]
-        //public User UserCreated { get; set; }
-
         public int UserAssignedId { get; set; }
         [ForeignKey("UserAssignedId")]
         public User UserAssigned { get; set; }
