@@ -6,6 +6,7 @@ using Task = TaskManagementSystem.Data.Task;
 
 namespace TaskManagementSystem.Controllers
 {
+    //[Authorize("JwtPolicy")]
     [Route("api/Task")]
     public class TaskController : ControllerBase
     {
@@ -38,12 +39,14 @@ namespace TaskManagementSystem.Controllers
                 return StatusCode(500, "An error occurred while creating the Task.");
             }
         }
-        [HttpGet("GetAllTasks")]
-        public async Task<List<Task>> GetTasks()
+        [HttpGet("GetTasks")]
+        public async Task<ActionResult<List<TaskModel>>> GetTasks(
+        [FromQuery(Name = "sortOrder")] string sortOrder,
+        [FromQuery(Name = "filterByUser")] int? filterByUser)
         {
             try
             {
-                return await _taskService.GetAllTasks();
+                return await _taskService.GetTasks( sortOrder, filterByUser);
             }
             catch (Exception ex)
             {
@@ -60,9 +63,16 @@ namespace TaskManagementSystem.Controllers
                 {
                     return NotFound("Task not found");
                 }
-                await _taskService.UpdateTask(existingTask, model);
+                bool updateResult = await _taskService.UpdateTask(existingTask, model);
 
-                return StatusCode(201, "Task successfully updated.");
+                if (updateResult)
+                {
+                    return StatusCode(200, "Task successfully updated.");
+                }
+                else
+                {
+                    return StatusCode(500, "An error occurred while updating the task.");
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -70,7 +80,73 @@ namespace TaskManagementSystem.Controllers
             }
             return NoContent();
         }
+        [HttpDelete("DeleteTask/{taskId}")]
+        public async Task<IActionResult> DeleteTask(int taskId)
+        {
+            try
+            {
+                Task existingTask = await _taskService.GetTaskById(taskId);
+                if (existingTask == null)
+                {
+                    return NotFound("Task not found");
+                }
+                bool deleteResult = await _taskService.DeleteTask(existingTask);
 
+                if (deleteResult)
+                {
+                    return StatusCode(200, "Task successfully deleted.");
+                }
+                else
+                {
+                    return StatusCode(500, "An error occurred while deleting the task.");
+                }
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+            return NoContent();
+        }
+        [HttpGet("Statuses")]
+        public async Task<List<TaskStatusDTO>> GetStatuses([FromQuery] int? statusId = null)
+        {
+            try
+            {
+                return await _taskService.GetTaskStatuses(statusId);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+        [HttpPatch("UpdateStatus/{taskId}")]
+        public async Task<IActionResult> UpdateStatus(int taskId, [FromBody] int statusId)
+        {
+            try
+            {
+                Task existingTask = await _taskService.GetTaskById(taskId);
+
+                if (existingTask == null)
+                {
+                    return NotFound("Data not found");
+                }
+                var UpdateStatus = await _taskService.UpdateStatus(existingTask, statusId);
+
+                if (UpdateStatus)
+                {
+                    return StatusCode(200, "Task Status successfully Updated.");
+                }
+                else
+                {
+                    return StatusCode(500, "An error occurred while Updating the task.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions appropriately
+                return StatusCode(500, "An error occurred while updating the status");
+            }
+        }
 
     }
 }

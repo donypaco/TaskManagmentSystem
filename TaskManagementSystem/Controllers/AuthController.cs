@@ -1,11 +1,13 @@
 ﻿
 //using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
+using TaskManagementSystem.Data;
 using TaskManagementSystem.DTO;
 using TaskManagementSystem.Services.Interfaces;
 
 namespace TaskManagementSystem.Controllers
 {
+    //[Authorize("JwtPolicy")]
     [Route("api/Auth")]
     public class AuthController : ControllerBase
     {
@@ -36,7 +38,6 @@ namespace TaskManagementSystem.Controllers
             {
                 return StatusCode(500, "An error occurred while processing the request.");
             }
-
         }
         [HttpPost("Login")]
         public IActionResult Login([FromBody] LoginModel model)
@@ -60,7 +61,31 @@ namespace TaskManagementSystem.Controllers
             {
                 return StatusCode(500, "An error occurred while processing the request.");
             }
-
         }
+        [HttpGet("Roles")]
+        public async Task<List<RoleDTO>> GetRoles()
+        {
+            try
+            {
+                return await _userService.GetRoles();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+        [HttpGet("Employees")]
+        public async Task<List<Employee>> GetAvailableEmployees()
+        {
+            try
+            {
+                return await _userService.GetAvailableEmployees();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
     }
 }

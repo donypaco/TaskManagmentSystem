@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -101,7 +103,30 @@ namespace TaskManagementSystem.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-
         }
+
+        public async Task<List<RoleDTO>> GetRoles()
+        {
+            var roles = await _context.Roles.Select(r => new RoleDTO
+            {
+                Id = r.Id,
+                RoleName = r.RoleName
+            }).ToListAsync();
+
+            return roles;
+        }
+        public async Task<List<Employee>> GetAvailableEmployees()
+        {
+            var employees = await _context.Users
+                .Where(u => u.RoleId == 2)
+                .Select(r => new Employee
+                {
+                    UserId = r.Id_User,
+                    UserName = r.UserName
+                }).ToListAsync();
+
+            return employees;
+        }
+
     }
 }

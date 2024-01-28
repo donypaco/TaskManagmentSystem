@@ -48,11 +48,37 @@ namespace TaskManagementSystem.Services
                 throw new ArgumentException("An error has occurred.");
             }
         }
-        public async Task<List<Task>> GetAllTasks()
+        public async Task<List<TaskModel>> GetTasks(string sortOrder, int? filterByUser)
         {
             try
             {
-               return await _context.Tasks.ToListAsync();
+                var query = _context.Tasks.AsQueryable();
+                sortOrder = (!string.IsNullOrEmpty(sortOrder)) ? sortOrder : "asc";
+
+                query = sortOrder.ToLower() == "desc" ?
+                    query.OrderByDescending(t => EF.Property<object>(t, "CreatedDate")) :
+                    query.OrderBy(t => EF.Property<object>(t, "CreatedDate"));
+
+                if (filterByUser.HasValue)
+                {
+                    query = query.Where(t => t.UserAssignedId == filterByUser);
+                }
+                var tasksWithRelatedData = await query.Include(t => t.Status)
+                                    .Include(t => t.UserAssigned)
+                                    .Select(t => new TaskModel
+                                    {
+                                        Id = t.Id,
+                                        Title = t.Title,
+                                        Description = t.Description,
+                                        CreatedDate = t.CreatedDate,
+                                        CompletedDate = t.CompletedDate,
+                                        Status = t.Status.Status,
+                                        StatusId = t.StatusId,
+                                        UserAssigned = t.UserAssigned.UserName
+                                    })
+                                    .ToListAsync();
+
+                return tasksWithRelatedData;
             }
             catch (Exception ex)
             {
@@ -74,20 +100,63 @@ namespace TaskManagementSystem.Services
         {
             try
             {
-                var status = await _context.TaskStatuses.FindAsync(model.StatusId);
-                var user = await _context.Users.FindAsync(model.UserAssignedId);
 
                 existingTask.Title = model.Title;
                 existingTask.Description = model.Description;
-                existingTask.UserAssigned = user;
-                existingTask.Status = status;
-
                 _context.Entry(existingTask).State = EntityState.Modified;
 
                 int savedChangesCount = await _context.SaveChangesAsync();
 
                 return savedChangesCount > 0;
 
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("An error has occurred.");
+            }
+        }
+        public async Task<bool> DeleteTask(Task existingTask)
+        {
+            try
+            {
+                 _context.Tasks.Remove(existingTask);
+                int savedChangesCount = await _context.SaveChangesAsync();
+                return (savedChangesCount > 0);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("An error has occurred.");
+            }
+        }
+        public async Task<List<TaskStatusDTO>> GetTaskStatuses(int? statusId)
+        {
+            var query = _context.TaskStatuses.AsQueryable();
+
+            if (statusId.HasValue)
+            {
+                query = query.Where(ts => ts.StatusId == statusId);
+            }
+
+            var statuses = await query
+                .Select(r => new TaskStatusDTO
+                {
+                    Id = r.StatusId,
+                    Status = r.Status
+                })
+                .ToListAsync();
+
+            return statuses;
+        }
+        public async Task<bool> UpdateStatus(Task existingTask, int statusId)
+        {
+            try
+            {
+                var newStatus = await _context.TaskStatuses.FindAsync(statusId);
+                existingTask.Status = newStatus;
+                if(newStatus.Status.ToLower() == "done")
+                    existingTask.CompletedDate = DateTime.Now;
+                int savedChangesCount = await _context.SaveChangesAsync();
+                return (savedChangesCount > 0);
             }
             catch (Exception ex)
             {
