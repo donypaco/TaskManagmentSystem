@@ -153,6 +153,7 @@ namespace TaskManagementSystem.Services
                 existingTask.Status = newStatus;
                 if(newStatus.Status.ToLower() == "done")
                     existingTask.CompletedDate = DateTime.Now;
+                _context.Entry(existingTask).State = EntityState.Modified;
                 int savedChangesCount = await _context.SaveChangesAsync();
                 return (savedChangesCount > 0);
             }

@@ -70,8 +70,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 //app.UseMiddleware<ErrorLoggingMiddleware>();
+app.UseCors("AllowOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.UseCors("AllowOrigin");
 app.Run();

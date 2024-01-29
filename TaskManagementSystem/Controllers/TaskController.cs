@@ -10,7 +10,7 @@ using Task = TaskManagementSystem.Data.Task;
 
 namespace TaskManagementSystem.Controllers
 {
-    //[Authorize("JwtPolicy")]
+    [Authorize("JwtPolicy")]
     [Route("api/Task")]
     public class TaskController : ControllerBase
     {
