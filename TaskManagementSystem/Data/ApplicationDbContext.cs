@@ -11,7 +11,6 @@ namespace TaskManagementSystem.Data
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskStatus> TaskStatuses { get; set; }
         public DbSet<User> Users { get; set; }
-
-
+        public DbSet<Log> Logs { get; set; }
     }
 }

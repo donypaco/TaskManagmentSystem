@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagementSystem.Data;
+using TaskManagementSystem.Middleware;
 using TaskManagementSystem.Services;
 using TaskManagementSystem.Services.Interfaces;
 
@@ -20,8 +21,8 @@ builder.Services.AddIdentity<User, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IUserService, UserService>();
-
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ILogService, LogService>();
 
 builder.Services.AddCors(p => p.AddPolicy("AllowOrigin", builder =>
 {
@@ -68,7 +69,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+//app.UseMiddleware<ErrorLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

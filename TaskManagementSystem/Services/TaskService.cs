@@ -9,12 +9,10 @@ namespace TaskManagementSystem.Services
     public class TaskService: ITaskService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
 
-        public TaskService(ApplicationDbContext context, IConfiguration configuration)
+        public TaskService(ApplicationDbContext context)
         {
             _context = context;
-            _configuration = configuration;
         }
         public async Task<bool> CreateTask(TaskModel model)
         {

@@ -12,9 +12,11 @@ namespace TaskManagementSystem.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-        public AuthController(IUserService userService)
+        private readonly ILogService _logService;
+        public AuthController(IUserService userService, ILogService logService)
         {
             _userService = userService;
+            _logService = logService;
         }
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
@@ -36,6 +38,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 return StatusCode(500, "An error occurred while processing the request.");
             }
         }
@@ -59,6 +62,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 return StatusCode(500, "An error occurred while processing the request.");
             }
         }
@@ -83,6 +87,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 return null;
             }
         }

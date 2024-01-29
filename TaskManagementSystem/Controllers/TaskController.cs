@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TaskManagementSystem.DTO;
+using TaskManagementSystem.Middleware;
+using TaskManagementSystem.Services;
 using TaskManagementSystem.Services.Interfaces;
 using Task = TaskManagementSystem.Data.Task;
 
@@ -11,9 +15,13 @@ namespace TaskManagementSystem.Controllers
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;
-        public TaskController(ITaskService taskService)
+        private readonly ILogger<TaskController> _logger;
+        private readonly ILogService _logService;
+        public TaskController(ITaskService taskService, ILogger<TaskController> logger, ILogService logService)
         {
             _taskService = taskService;
+            _logger = logger;
+            _logService = logService;
         }
 
         [HttpPost("CreateTask")]
@@ -36,6 +44,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 return StatusCode(500, "An error occurred while creating the Task.");
             }
         }
@@ -74,8 +83,9 @@ namespace TaskManagementSystem.Controllers
                     return StatusCode(500, "An error occurred while updating the task.");
                 }
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 throw;
             }
             return NoContent();
@@ -101,8 +111,9 @@ namespace TaskManagementSystem.Controllers
                     return StatusCode(500, "An error occurred while deleting the task.");
                 }
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 throw;
             }
             return NoContent();
@@ -116,6 +127,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
+                _logService.LogException(HttpContext, ex);
                 return null;
             }
         }
@@ -143,7 +155,7 @@ namespace TaskManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                // Handle exceptions appropriately
+                _logService.LogException(HttpContext, ex);
                 return StatusCode(500, "An error occurred while updating the status");
             }
         }
